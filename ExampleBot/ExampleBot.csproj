@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFrameworks>net8.0</TargetFrameworks>
+	<Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.25.2" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\SC2API-CSharp\SC2API-CSharp.csproj" />
+    <ProjectReference Include="..\SC2APIProtocol\SC2APIProtocol.csproj" />
+  </ItemGroup>
+</Project>
