@@ -49,12 +49,13 @@ namespace SC2API.CSharp
             PlayerSetup player1 = new PlayerSetup();
             createGame.PlayerSetup.Add(player1);
             player1.Type = PlayerType.Participant;
-            //player1.PlayerName = "First Player"; // TODO: fix this
 
             PlayerSetup player2 = new PlayerSetup();
             createGame.PlayerSetup.Add(player2);
-            player2.Race = opponentRace;
             player2.Type = PlayerType.Computer;
+
+            // these settings are only applicable to builtin AI
+            player2.Race = opponentRace;
             player2.Difficulty = opponentDifficulty;
 
             Request request = new Request();
@@ -76,12 +77,10 @@ namespace SC2API.CSharp
             PlayerSetup player1 = new PlayerSetup();
             createGame.PlayerSetup.Add(player1);
             player1.Type = PlayerType.Participant;
-            //player1.PlayerName = "First Player"; // TODO: fix this
 
             PlayerSetup player2 = new PlayerSetup();
             createGame.PlayerSetup.Add(player2);
             player2.Type = PlayerType.Participant;
-            //player2.PlayerName = "Second Player"; // TODO: fix this
 
             Request request = new Request();
             request.CreateGame = createGame;

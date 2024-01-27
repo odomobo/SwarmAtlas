@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using static Google.Protobuf.Reflection.UninterpretedOption.Types;
 
@@ -23,14 +24,25 @@ namespace SC2API.CSharp
             _config = config;
         }
 
-        public async Task RunSinglePlayer(Bot bot, string map, Race myRace, Race opponentRace, Difficulty opponentDifficulty)
+        public async Task RunSinglePlayer(Bot bot, string map, Race myRace, int gamePort, Race opponentRace, Difficulty opponentDifficulty)
         {
             var connection = new GameConnection(_config);
-            _exeLauncher.StartSC2Instance(_config.GamePort);
-            await connection.Connect(_config.GamePort);
+            _exeLauncher.StartSC2Instance(gamePort);
+            await connection.Connect(gamePort);
             await connection.CreateAiGame(map, opponentRace, opponentDifficulty);
             uint playerId = await connection.JoinGame(myRace, bot.BotName);
             await connection.Run(bot, playerId, null);
+        }
+
+        public async Task CreateAndRunLadder(Bot bot, string map, Race myRace, int gamePort, int startPort, string opponentID, ManualResetEvent ladderStarted)
+        {
+            _exeLauncher.StartSC2Instance(gamePort);
+            var connection = new GameConnection(_config);
+            await connection.Connect(gamePort);
+            await connection.CreateLadderGame(map);
+            ladderStarted.Set();
+            uint playerId = await connection.JoinGameLadder(myRace, bot.BotName, startPort);
+            await connection.Run(bot, playerId, opponentID);
         }
 
         public async Task RunLadder(Bot bot, Race myRace, int gamePort, int startPort, string opponentID)
@@ -41,30 +53,67 @@ namespace SC2API.CSharp
             await connection.Run(bot, playerId, opponentID);
         }
 
-        public async Task RunVsHuman(Bot bot, string map, Race botRace, int gamePort, int startPort, Race humanRace, string humanPlayerName)
+        // doesn't seem to work
+        public async Task RunVsHumanSimple(Bot bot, string map, Race botRace, int gamePortHuman, int gamePortBot, int startPort, Race humanRace, string humanPlayerName)
         {
-            // TODO: figure out how to make this work. Maybe we need 2 sc2 instances? How do they talk to each other?
-            _exeLauncher.StartSC2Instance(_config.GamePort);
-            var humanConnection = new GameConnection(_config);
-            await humanConnection.Connect(gamePort);
-            await humanConnection.CreateLadderGame(map);
+            var ladderStarted = new ManualResetEvent(false);
+            var humanProxyBot = new HumanProxyBot();
+            var humanTask = CreateAndRunLadder(humanProxyBot, map, humanRace, gamePortHuman, startPort, null, ladderStarted);
 
+            ladderStarted.WaitOne();
 
-            _exeLauncher.StartSC2Instance(9999);
-            var botConnection = new GameConnection(_config);
-            await botConnection.Connect(9999);
+            var botTask = RunLadder(bot, botRace, gamePortBot, startPort, null);
 
-            // maybe not doing this in the right order? I'm not really sure.......
-            uint humanPlayerId = await humanConnection.JoinGameLadder(humanRace, humanPlayerName, startPort);
-            uint botPlayerId = await botConnection.JoinGameLadder(botRace, bot.BotName, startPort);
-            
-            await botConnection.Run(bot, botPlayerId, null);
+            await Task.WhenAll(botTask, humanTask);
         }
 
-        public async Task RunLadder(Bot bot, Race myRace, string[] args)
+        public async Task JoinAndRun(GameConnection connection, Bot bot, Race race, string name, int startPort, string opponentId)
         {
-            _config.ParseClArgs(args);
-            await RunLadder(bot, myRace, _config.GamePort, _config.StartPort, _config.OpponentID);
+            uint playerId = await connection.JoinGameLadder(race, name, startPort);
+            await connection.Run(bot, playerId, opponentId);
+        }
+
+        public async Task RunVsHuman(Bot bot, string map, Race botRace, int gamePortHuman, int gamePortBot, int startPort, Race humanRace, string humanPlayerName)
+        {
+            // steps:
+            // 1. Launch human SC2 instance
+            // 2. Connect human sc2 instance
+            // 3. Create a ladder game
+            // 4. Launch bot sc2 instance
+            // 5. Connect bot sc2 instance
+            // 6. join & run human
+            // 7. join & run bot
+
+            // 1
+            var humanProxyBot = new HumanProxyBot();
+            _exeLauncher.StartSC2Instance(gamePortHuman);
+            
+            // 2
+            var humanConnection = new GameConnection(_config);
+            await humanConnection.Connect(gamePortHuman);
+
+            // 3.
+            await humanConnection.CreateLadderGame(map);
+
+            // 4
+            _exeLauncher.StartSC2Instance(gamePortBot);
+
+            // 5
+            var botConnection = new GameConnection(_config);
+            await botConnection.Connect(gamePortBot);
+
+            // 6
+            var humanTask = JoinAndRun(humanConnection, humanProxyBot, humanRace, humanPlayerName, startPort, null);
+
+            // 7
+            var botTask = JoinAndRun(botConnection, bot, botRace, bot.BotName, startPort, null);
+
+            await Task.WhenAll(botTask, humanTask);
+        }
+
+        public async Task RunLadder(Bot bot, Race myRace, CommandLineArgs commandLineArgs)
+        {
+            await RunLadder(bot, myRace, commandLineArgs.GamePort, commandLineArgs.StartPort, commandLineArgs.OpponentID);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace ExampleBot
     public class Program
     {
         // Settings for your bot.
-        private static Bot bot = new Bot();
+        private static ExampleBot bot = new ExampleBot();
         private static Race botRace = Race.Zerg;
 
         // Settings for single player mode.
@@ -27,12 +27,13 @@ namespace ExampleBot
 
             if (args.Length == 0)
             {
-                //gameLauncher.RunSinglePlayer(bot, mapName, race, opponentRace, opponentDifficulty).Wait();
-                gameLauncher.RunVsHuman(bot, mapName, botRace, 5678, 6000, Race.Terran, "Human").Wait();
+                //gameLauncher.RunSinglePlayer(bot, mapName, botRace, 5678, opponentRace, opponentDifficulty).Wait();
+                gameLauncher.RunVsHuman(bot, mapName, botRace, 5678, 5679, 6000, Race.Terran, "Human").Wait();
             }
             else
             {
-                gameLauncher.RunLadder(bot, botRace, args).Wait();
+                var commandLineArgs = new CommandLineArgs(args);
+                gameLauncher.RunLadder(bot, botRace, commandLineArgs).Wait();
             }
         }
     }
