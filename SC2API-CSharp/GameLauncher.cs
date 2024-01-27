@@ -86,7 +86,7 @@ namespace SC2API.CSharp
 
             // 1
             var humanProxyBot = new HumanProxyBot();
-            _exeLauncher.StartSC2Instance(gamePortHuman);
+            _exeLauncher.StartSC2Instance(gamePortHuman, false); // true if you want fs
             
             // 2
             var humanConnection = new GameConnection(_config);

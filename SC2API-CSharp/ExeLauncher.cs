@@ -18,10 +18,15 @@ namespace SC2API.CSharp
             _gameConfig = gameConfig;
         }
 
-        public void StartSC2Instance(int port)
+        public void StartSC2Instance(int port, bool fullscreen = false)
         {
             ProcessStartInfo processStartInfo = new ProcessStartInfo(_gameConfig.StarcraftExe);
-            processStartInfo.Arguments = string.Format("-listen {0} -port {1} -displayMode 0 -dataVersion {2}", _gameConfig.Address, port, _gameConfig.DataVersion);
+            processStartInfo.Arguments = string.Format("-listen {0} -port {1} -displayMode {2} -dataVersion {3}",
+                _gameConfig.Address, 
+                port,
+                fullscreen ? 1 : 0,
+                _gameConfig.DataVersion
+            );
             processStartInfo.WorkingDirectory = Path.Combine(_gameConfig.StarcraftDir, "Support64");
             Process.Start(processStartInfo);
         }
