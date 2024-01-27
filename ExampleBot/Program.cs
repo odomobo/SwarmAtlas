@@ -1,16 +1,16 @@
-﻿using SC2API_CSharp;
+﻿using SC2API.CSharp;
 using SC2APIProtocol;
 
-namespace SC2Sharp
+namespace ExampleBot
 {
     public class Program
     {
         // Settings for your bot.
         private static Bot bot = new Bot();
-        private static Race race = Race.Terran;
+        private static Race botRace = Race.Zerg;
 
         // Settings for single player mode.
-        private static string mapName = @"InterloperLE.SC2Map";
+        private static string mapName = @"BlackburnAIE.SC2Map";
         private static Race opponentRace = Race.Random;
         private static Difficulty opponentDifficulty = Difficulty.VeryEasy;
 
@@ -20,10 +20,20 @@ namespace SC2Sharp
          */
         public static void Run(string[] args)
         {
+            var gameConfig = new GameConfig();
+            //var gameConnection = new GameConnection(gameConfig);
+            var exeLauncher = new ExeLauncher(gameConfig);
+            var gameLauncher = new GameLauncher(exeLauncher, gameConfig);
+
             if (args.Length == 0)
-                new GameConnection().RunSinglePlayer(bot, mapName, race, opponentRace, opponentDifficulty).Wait();
+            {
+                //gameLauncher.RunSinglePlayer(bot, mapName, race, opponentRace, opponentDifficulty).Wait();
+                gameLauncher.RunVsHuman(bot, mapName, botRace, 5678, 6000, Race.Terran, "Human").Wait();
+            }
             else
-                new GameConnection().RunLadder(bot, race, args).Wait();
+            {
+                gameLauncher.RunLadder(bot, botRace, args).Wait();
+            }
         }
     }
 }

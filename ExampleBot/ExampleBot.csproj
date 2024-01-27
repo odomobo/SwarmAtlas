@@ -10,7 +10,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="..\SC2API-CSharp\SC2API-CSharp.csproj" />
+    <ProjectReference Include="..\SC2API-CSharp\SC2API.CSharp.csproj" />
     <ProjectReference Include="..\SC2APIProtocol\SC2APIProtocol.csproj" />
   </ItemGroup>
 </Project>

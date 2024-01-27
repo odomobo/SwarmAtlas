@@ -7,35 +7,26 @@ using System.Threading;
 using System.Threading.Tasks;
 using SC2APIProtocol;
 
-namespace SC2API_CSharp
+namespace SC2API.CSharp
 {
     public class GameConnection
     {
         ProtobufProxy proxy = new ProtobufProxy();
-        string address = "127.0.0.1";
 
-        string starcraftExe;
-        string starcraftDir;
+        private readonly GameConfig _gameConfig;
 
-        public GameConnection()
-        { }
-
-        public void StartSC2Instance(int port)
+        public GameConnection(GameConfig gameConfig)
         {
-            ProcessStartInfo processStartInfo = new ProcessStartInfo(starcraftExe);
-            processStartInfo.Arguments = String.Format("-listen {0} -port {1} -displayMode 0", address, port);
-            processStartInfo.WorkingDirectory = Path.Combine(starcraftDir, "Support64");
-            Process.Start(processStartInfo);
+            _gameConfig = gameConfig;
         }
 
         public async Task Connect(int port)
         {
-
             for (int i = 0; i < 40; i++)
             {
                 try
                 {
-                    await proxy.Connect(address, port);
+                    await proxy.Connect(_gameConfig.Address, port);
                     return;
                 }
                 catch (WebSocketException) { }
@@ -44,12 +35,12 @@ namespace SC2API_CSharp
             throw new Exception("Unable to make a connection.");
         }
 
-        public async Task CreateGame(String mapName, Race opponentRace, Difficulty opponentDifficulty)
+        public async Task CreateAiGame(string mapName, Race opponentRace, Difficulty opponentDifficulty)
         {
             RequestCreateGame createGame = new RequestCreateGame();
-            createGame.Realtime = false;
+            createGame.Realtime = _gameConfig.Realtime;
 
-            string mapPath = Path.Combine(starcraftDir, "Maps", mapName);
+            string mapPath = Path.Combine(_gameConfig.StarcraftDir, "Maps", mapName);
             if (!File.Exists(mapPath))
                 throw new Exception("Could not find map at " + mapPath);
             createGame.LocalMap = new LocalMap();
@@ -58,6 +49,7 @@ namespace SC2API_CSharp
             PlayerSetup player1 = new PlayerSetup();
             createGame.PlayerSetup.Add(player1);
             player1.Type = PlayerType.Participant;
+            //player1.PlayerName = "First Player"; // TODO: fix this
 
             PlayerSetup player2 = new PlayerSetup();
             createGame.PlayerSetup.Add(player2);
@@ -70,31 +62,37 @@ namespace SC2API_CSharp
             Response response = await proxy.SendRequest(request);
         }
 
-        private void readSettings()
+        public async Task CreateLadderGame(string mapName)
         {
-            string myDocuments = Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
-            string executeInfo = Path.Combine(myDocuments, "Starcraft II", "ExecuteInfo.txt");
-            if (File.Exists(executeInfo))
-            {
-                string[] lines = File.ReadAllLines(executeInfo);
-                foreach (string line in lines)
-                {
-                    string argument = line.Substring(line.IndexOf('=') + 1).Trim();
-                    if (line.Trim().StartsWith("executable"))
-                    {
-                        starcraftExe = argument;
-                        starcraftDir = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(starcraftExe)));
-                    }
-                }
-            }
-            else
-                throw new Exception("Unable to find ExecuteInfo.txt at " + executeInfo);
+            RequestCreateGame createGame = new RequestCreateGame();
+            createGame.Realtime = _gameConfig.Realtime;
+
+            string mapPath = Path.Combine(_gameConfig.StarcraftDir, "Maps", mapName);
+            if (!File.Exists(mapPath))
+                throw new Exception("Could not find map at " + mapPath);
+            createGame.LocalMap = new LocalMap();
+            createGame.LocalMap.MapPath = mapPath;
+
+            PlayerSetup player1 = new PlayerSetup();
+            createGame.PlayerSetup.Add(player1);
+            player1.Type = PlayerType.Participant;
+            //player1.PlayerName = "First Player"; // TODO: fix this
+
+            PlayerSetup player2 = new PlayerSetup();
+            createGame.PlayerSetup.Add(player2);
+            player2.Type = PlayerType.Participant;
+            //player2.PlayerName = "Second Player"; // TODO: fix this
+
+            Request request = new Request();
+            request.CreateGame = createGame;
+            Response response = await proxy.SendRequest(request);
         }
 
-        public async Task<uint> JoinGame(Race race)
+        public async Task<uint> JoinGame(Race race, string playerName)
         {
             RequestJoinGame joinGame = new RequestJoinGame();
             joinGame.Race = race;
+            joinGame.PlayerName = playerName;
 
             joinGame.Options = new InterfaceOptions();
             joinGame.Options.Raw = true;
@@ -106,10 +104,11 @@ namespace SC2API_CSharp
             return response.JoinGame.PlayerId;
         }
 
-        public async Task<uint> JoinGameLadder(Race race, int startPort)
+        public async Task<uint> JoinGameLadder(Race race, string playerName, int startPort)
         {
             RequestJoinGame joinGame = new RequestJoinGame();
             joinGame.Race = race;
+            joinGame.PlayerName = playerName;
 
             joinGame.SharedPort = startPort + 1;
             joinGame.ServerPorts = new PortSet();
@@ -219,29 +218,6 @@ namespace SC2API_CSharp
                 stepRequest.Step.Count = 1;
                 await proxy.SendRequest(stepRequest);
             }
-        }
-
-        public async Task RunSinglePlayer(Bot bot, string map, Race myRace, Race opponentRace, Difficulty opponentDifficulty)
-        {
-            readSettings();
-            StartSC2Instance(5678);
-            await Connect(5678);
-            await CreateGame(map, opponentRace, opponentDifficulty);
-            uint playerId = await JoinGame(myRace);
-            await Run(bot, playerId, null);
-        }
-
-        public async Task RunLadder(Bot bot, Race myRace, int gamePort, int startPort, String opponentID)
-        {
-            await Connect(gamePort);
-            uint playerId = await JoinGameLadder(myRace, startPort);
-            await Run(bot, playerId, opponentID);
-        }
-
-        public async Task RunLadder(Bot bot, Race myRace, string[] args)
-        {
-            CLArgs clargs = new CLArgs(args);
-            await RunLadder(bot, myRace, clargs.GamePort, clargs.StartPort, clargs.OpponentID);
         }
     }
 }

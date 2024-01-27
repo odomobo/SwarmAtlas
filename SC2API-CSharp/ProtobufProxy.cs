@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Google.Protobuf;
 using SC2APIProtocol;
 
-namespace SC2API_CSharp
+namespace SC2API.CSharp
 {
     public class ProtobufProxy
     {

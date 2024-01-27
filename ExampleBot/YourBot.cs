@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using SC2APIProtocol;
 
-namespace SC2Sharp
+namespace ExampleBot
 {
-    class Bot : SC2API_CSharp.Bot
+    class Bot : SC2API.CSharp.Bot
     {
+        public string BotName => "ExampleBot";
+
         public void OnStart(ResponseGameInfo gameInfo, ResponseData data, ResponsePing pingResponse, ResponseObservation observation, uint playerId, string opponentID)
         { }
     
