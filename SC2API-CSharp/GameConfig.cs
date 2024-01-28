@@ -13,6 +13,7 @@ namespace SC2API.CSharp
     public class GameConfig
     {
         public GameConfig() {
+            SetUserPaths();
             findSc2InstallPath();
         }
 
@@ -20,11 +21,18 @@ namespace SC2API.CSharp
 
         public string StarcraftDir;
         public string StarcraftExe;
+        public string ReplayPath;
         public string DataVersion => _gameVersion.DataVersion;
 
         public bool Realtime { get; set; } = true;
 
         private GameVersion _gameVersion = new GameVersion("4.10.0", "B89B5D6FA7CBF6452E721311BFBC6CB2", "Base75689");
+
+        private void SetUserPaths()
+        {
+            string myDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            ReplayPath = Path.Combine(myDocuments, "Starcraft II", "Replays", "Multiplayer");
+        }
 
         private void findSc2InstallPath()
         {

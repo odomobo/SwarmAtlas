@@ -9,18 +9,9 @@ using Action = SC2APIProtocol.Action;
 
 namespace ExampleBot
 {
-    internal interface IInnerBot
+    internal class InnerBot
     {
-
-        void OnStart(ResponseGameInfo gameInfo, ResponseData data, ResponsePing pingResponse, ResponseObservation observation, uint playerId, string opponentID);
-
-        List<Action> OnFrame(ResponseObservation observation);
-
-        void OnEnd(ResponseObservation observation, Result result);
-    }
-    internal class InnerBot : IInnerBot
-    {
-        public uint LastProcessedStep { get; set; }
+        public uint LastStepId { get; set; }
 
         public void OnStart(ResponseGameInfo gameInfo, ResponseData data, ResponsePing pingResponse, ResponseObservation observation, uint playerId, string opponentID)
         {
@@ -32,7 +23,8 @@ namespace ExampleBot
 
         public List<Action> OnFrame(ResponseObservation observation)
         {
-            LastProcessedStep = observation.Observation.GameLoop;
+            Console.WriteLine($"Processing step {observation.Observation.GameLoop}; last step ID was {LastStepId}");
+            LastStepId = observation.Observation.GameLoop;
 
             List<Action> actions = new List<Action>();
 

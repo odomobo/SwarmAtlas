@@ -174,8 +174,7 @@ namespace SC2API.CSharp
         {
             var request = new Request();
             request.StartReplay = new RequestStartReplay();
-            string myDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            request.StartReplay.ReplayPath = Path.Combine(myDocuments, "Starcraft II", "Replays", "Multiplayer", replayFilename);
+            request.StartReplay.ReplayPath = Path.Combine(_gameConfig.ReplayPath, replayFilename);
             request.StartReplay.ObservedPlayerId = (int)playerId; // bot is always 2, I think?
             var options = new InterfaceOptions();
             options.Raw = true;
