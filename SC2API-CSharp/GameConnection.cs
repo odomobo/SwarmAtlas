@@ -158,65 +158,38 @@ namespace SC2API.CSharp
             return response.Query;
         }
 
-        public async Task Run(Bot bot, uint playerId, string opponentID)
+        public async Task SaveReplay()
         {
-            Request gameInfoReq = new Request();
-            gameInfoReq.GameInfo = new RequestGameInfo();
+            var request = new Request();
+            request.SaveReplay = new RequestSaveReplay();
+            var response = await proxy.SendRequest(request);
+        }
 
-            Response gameInfoResponse = await proxy.SendRequest(gameInfoReq);
+        public async Task Run(IBot bot, uint playerId, string opponentID)
+        {
+            await bot.Run(proxy, playerId, opponentID);
+        }
 
-            Request gameDataRequest = new Request();
-            gameDataRequest.Data = new RequestData();
-            gameDataRequest.Data.UnitTypeId = true;
-            gameDataRequest.Data.AbilityId = true;
-            gameDataRequest.Data.BuffId = true;
-            gameDataRequest.Data.EffectId = true;
-            gameDataRequest.Data.UpgradeId = true;
+        public async Task StartReplay(string replayFilename, uint playerId)
+        {
+            var request = new Request();
+            request.StartReplay = new RequestStartReplay();
+            string myDocuments = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            request.StartReplay.ReplayPath = Path.Combine(myDocuments, "Starcraft II", "Replays", "Multiplayer", replayFilename);
+            request.StartReplay.ObservedPlayerId = (int)playerId; // bot is always 2, I think?
+            var options = new InterfaceOptions();
+            options.Raw = true;
+            options.ShowCloaked = true;
+            options.Score = true;
+            request.StartReplay.Options = options;
+            request.StartReplay.Realtime = false;
 
-            Response dataResponse = await proxy.SendRequest(gameDataRequest);
+            var response = await proxy.SendRequest(request);
+        }
 
-            ResponsePing pingResponse = await Ping();
-
-            bool start = true;
-
-            while (true)
-            {
-                Request observationRequest = new Request();
-                observationRequest.Observation = new RequestObservation();
-                Response response = await proxy.SendRequest(observationRequest);
-
-                ResponseObservation observation = response.Observation;
-
-                if (observation == null)
-                {
-                    bot.OnEnd(observation, Result.Unset);
-                    break;
-                }
-                if (response.Status == Status.Ended || response.Status == Status.Quit)
-                {
-                    bot.OnEnd(observation, observation.PlayerResult[(int)playerId - 1].Result);
-                    break;
-                }
-
-                if (start)
-                {
-                    start = false;
-                    bot.OnStart(gameInfoResponse.GameInfo, dataResponse.Data, pingResponse, observation, playerId, opponentID);
-                }
-
-                IEnumerable<SC2APIProtocol.Action> actions = bot.OnFrame(observation);
-
-                Request actionRequest = new Request();
-                actionRequest.Action = new RequestAction();
-                actionRequest.Action.Actions.AddRange(actions);
-                if (actionRequest.Action.Actions.Count > 0)
-                    await proxy.SendRequest(actionRequest);
-
-                Request stepRequest = new Request();
-                stepRequest.Step = new RequestStep();
-                stepRequest.Step.Count = 1;
-                await proxy.SendRequest(stepRequest);
-            }
+        public async Task ProcessReplay(IBot bot, uint playerId)
+        {
+            await bot.ProcessReplay(proxy, playerId);
         }
     }
 }

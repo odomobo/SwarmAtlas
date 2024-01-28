@@ -21,20 +21,42 @@ namespace ExampleBot
         public static void Run(string[] args)
         {
             var gameConfig = new GameConfig();
-            //var gameConnection = new GameConnection(gameConfig);
             var exeLauncher = new ExeLauncher(gameConfig);
             var gameLauncher = new GameLauncher(exeLauncher, gameConfig);
 
             if (args.Length == 0)
             {
                 //gameLauncher.RunSinglePlayer(bot, mapName, botRace, 5678, opponentRace, opponentDifficulty).Wait();
-                gameLauncher.RunVsHuman(bot, mapName, botRace, 5678, 5679, 6000, Race.Terran, "Human").Wait();
+                switch (2)
+                {
+                    case 1:
+                        RunVsHuman(gameLauncher);
+                        break;
+                    case 2:
+                        ProcessReplay();
+                        break;
+                }
             }
             else
             {
                 var commandLineArgs = new CommandLineArgs(args);
-                gameLauncher.RunLadder(bot, botRace, commandLineArgs).Wait();
+                gameLauncher.RunLadder(bot, botRace, commandLineArgs.GamePort, commandLineArgs.StartPort, commandLineArgs.OpponentID).Wait();
             }
+        }
+
+        private static void RunVsHuman(GameLauncher gameLauncher)
+        {
+            gameLauncher.RunVsHuman(bot, mapName, botRace, 5678, 5679, 6000, Race.Terran, "Human").Wait();
+        }
+
+        private static void ProcessReplay()
+        {
+            var gameConfig = new GameConfig();
+            gameConfig.Realtime = false; // we want to process replays fast... I think
+            var exeLauncher = new ExeLauncher(gameConfig);
+            var gameLauncher = new GameLauncher(exeLauncher, gameConfig);
+
+            gameLauncher.ProcessReplay(bot, 2, 5678, @"Blackburn AIE (71).SC2Replay").Wait();
         }
     }
 }
