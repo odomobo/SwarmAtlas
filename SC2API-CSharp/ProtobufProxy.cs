@@ -40,6 +40,14 @@ namespace SC2API.CSharp
             return await ReadMessage();
         }
 
+        public async Task<(Response, byte[])> SendRequestRaw(Request request)
+        {
+            await WriteMessage(request);
+            var messageBuf = await GetMessageBuf();
+            var response = GetResponseFromResponseBuf(messageBuf);
+            return (response, messageBuf);
+        }
+
         public async Task Quit()
         {
             Request quit = new Request();
@@ -55,7 +63,7 @@ namespace SC2API.CSharp
             await clientSocket.SendAsync(new ArraySegment<byte>(sendBuf, 0, (int)outStream.Position), WebSocketMessageType.Binary, true, token);
         }
 
-        private async Task<Response> ReadMessage()
+        private async Task<byte[]> GetMessageBuf()
         {
             byte[] receiveBuf = new byte[1024 * 1024];
             bool finished = false;
@@ -78,10 +86,51 @@ namespace SC2API.CSharp
                 curPos += result.Count;
                 finished = result.EndOfMessage;
             }
+            var ret = new byte[curPos]; // cur pos should be 1 past the last byte read, or the length
+            Array.Copy(receiveBuf, ret, curPos);
+            return ret;
+        }
 
-            Response response = Response.Parser.ParseFrom(new System.IO.MemoryStream(receiveBuf, 0, curPos));
-            
+        public Response GetResponseFromResponseBuf(byte[] messageBuf)
+        {
+            Response response = Response.Parser.ParseFrom(new System.IO.MemoryStream(messageBuf, 0, messageBuf.Length));
+
             return response;
         }
+
+        private async Task<Response> ReadMessage()
+        {
+            var messageBuf = await GetMessageBuf();
+            return GetResponseFromResponseBuf(messageBuf);
+        }
+
+        //private async Task<Response> ReadMessage()
+        //{
+        //    byte[] receiveBuf = new byte[1024 * 1024];
+        //    bool finished = false;
+        //    int curPos = 0;
+        //    while (!finished)
+        //    {
+        //        int left = receiveBuf.Length - curPos;
+        //        if (left < 0)
+        //        {
+        //            // No space left in the array, enlarge the array by doubling its size.
+        //            byte[] temp = new byte[receiveBuf.Length * 2];
+        //            Array.Copy(receiveBuf, temp, receiveBuf.Length);
+        //            receiveBuf = temp;
+        //            left = receiveBuf.Length - curPos;
+        //        }
+        //        WebSocketReceiveResult result = await clientSocket.ReceiveAsync(new ArraySegment<byte>(receiveBuf, curPos, left), token);
+        //        if (result.MessageType != WebSocketMessageType.Binary)
+        //            throw new Exception("Expected Binary message type.");
+
+        //        curPos += result.Count;
+        //        finished = result.EndOfMessage;
+        //    }
+
+        //    Response response = Response.Parser.ParseFrom(new System.IO.MemoryStream(receiveBuf, 0, curPos));
+            
+        //    return response;
+        //}
     }
 }

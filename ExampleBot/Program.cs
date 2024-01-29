@@ -56,7 +56,7 @@ namespace ExampleBot
             var exeLauncher = new ExeLauncher(gameConfig);
             var gameLauncher = new GameLauncher(exeLauncher, gameConfig);
 
-            gameLauncher.ProcessReplay(bot, 2, 5678, @"Blackburn AIE (85).SC2Replay").Wait();
+            gameLauncher.ProcessReplay(bot, 2, 5678, @"Blackburn AIE (103).SC2Replay").Wait();
         }
     }
 }

@@ -32,8 +32,9 @@ namespace ExampleBot
 
         public async Task Run(ProtobufProxy proxy, uint playerId, string opponentID)
         {
+            int observationsBytesSoFar = 0;
             _innerBot = new InnerBot();
-            var dbFilename = GetDbFilename();
+            var dbFilename = GenerateDbFilename();
             OpenDb(dbFilename);
             var botStates = _liteDb.GetCollection<InnerBot>("botStates");
             botStates.EnsureIndex(x => x.LastStepId);
@@ -51,7 +52,8 @@ namespace ExampleBot
             gameDataRequest.Data.EffectId = true;
             gameDataRequest.Data.UpgradeId = true;
 
-            Response dataResponse = await proxy.SendRequest(gameDataRequest);
+            var (dataResponse, dataResponseBuf) = await proxy.SendRequestRaw(gameDataRequest);
+            dataResponse = proxy.GetResponseFromResponseBuf(dataResponseBuf);
 
             ResponsePing pingResponse = await Ping(proxy);
 
@@ -61,7 +63,9 @@ namespace ExampleBot
             {
                 Request observationRequest = new Request();
                 observationRequest.Observation = new RequestObservation();
-                Response response = await proxy.SendRequest(observationRequest);
+                var (response, responseBuf) = await proxy.SendRequestRaw(observationRequest);
+                observationsBytesSoFar += responseBuf.Length;
+                Console.WriteLine($"Observations bytes so far: {observationsBytesSoFar}");
 
                 ResponseObservation observation = response.Observation;
 
@@ -84,19 +88,41 @@ namespace ExampleBot
                 {
                     start = false;
                     _innerBot.OnStart(gameInfoResponse.GameInfo, dataResponse.Data, pingResponse, observation, playerId, opponentID);
-                    actions.Add(SendDbInfoChat(dbFilename));
+                    //actions.Add(SendDbInfoChat(dbFilename));
                 }
 
                 // if same step ID as last time, then we need to skip processing
                 var stepId = observation.Observation.GameLoop;
-                if (stepId != _innerBot.LastStepId)
+                if (stepId != _innerBot.LastStepId || true) // TODO; get rid of "true" condition
                 {
+                    // let's see what happens if this gets sent on step 6... I imagine it'll show on step 8
+                    if (stepId == 6)
+                    {
+                        actions.Add(SendDbInfoChat(dbFilename));
+                    }
+
                     var botActions = _innerBot.OnFrame(observation);
                     actions.AddRange(botActions);
                     botStates.Insert(_innerBot);
                     _liteDb.Commit();
                     // TODO: uncomment this:
                     _innerBot = botStates.FindOne(x => x.LastStepId == _innerBot.LastStepId);
+
+                    var dbFilenameFromChat = GetDbInfoFromChat(observation, playerId);
+                    if (dbFilenameFromChat != null)
+                    {
+                        Console.WriteLine($"Got db filename chat message on step {stepId}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Skipping duplicate step {stepId}");
+
+                    var dbFilenameFromChat = GetDbInfoFromChat(observation, playerId);
+                    if (dbFilenameFromChat != null)
+                    {
+                        Console.WriteLine($"Got db filename chat message on step {stepId}");
+                    }
                 }
 
                 Request actionRequest = new Request();
@@ -109,16 +135,20 @@ namespace ExampleBot
                 stepRequest.Step = new RequestStep();
                 stepRequest.Step.Count = 1;
                 await proxy.SendRequest(stepRequest);
+
+                Thread.Sleep(100);
             }
         }
 
-        private string GetDbFilename()
+        private string GenerateDbFilename()
         {
             return $"match {DateTime.Now:yyyy-MM-dd_HH-mm-ss}.db";
         }
 
         public async Task ProcessReplay(ProtobufProxy proxy, uint playerId)
         {
+            int observationsBytesSoFar = 0;
+
             Request gameInfoReq = new Request();
             gameInfoReq.GameInfo = new RequestGameInfo();
 
@@ -132,7 +162,10 @@ namespace ExampleBot
             gameDataRequest.Data.EffectId = true;
             gameDataRequest.Data.UpgradeId = true;
 
-            Response dataResponse = await proxy.SendRequest(gameDataRequest);
+            var (dataResponse, dataResponseBuf) = await proxy.SendRequestRaw(gameDataRequest);
+            dataResponse = proxy.GetResponseFromResponseBuf(dataResponseBuf);
+
+            var units = new Units(dataResponse.Data.Units);
 
             ResponsePing pingResponse = await Ping(proxy);
 
@@ -142,7 +175,9 @@ namespace ExampleBot
             {
                 Request observationRequest = new Request();
                 observationRequest.Observation = new RequestObservation();
-                Response response = await proxy.SendRequest(observationRequest);
+                var (response, responseBuf) = await proxy.SendRequestRaw(observationRequest);
+                observationsBytesSoFar += responseBuf.Length;
+                Console.WriteLine($"Observations bytes so far: {observationsBytesSoFar}");
 
                 ResponseObservation observation = response.Observation;
 
@@ -165,7 +200,7 @@ namespace ExampleBot
                     break;
                 }
 
-                GetDbInfoFromChat(observation, playerId);
+                OpenDbFromChat(observation, playerId);
 
                 if (start)
                 {
@@ -243,12 +278,8 @@ namespace ExampleBot
         }
 
         private static readonly Regex ChatDbRegex = new Regex(@"^db:(.*)$");
-        private void GetDbInfoFromChat(ResponseObservation observation, uint playerId)
+        private string GetDbInfoFromChat(ResponseObservation observation, uint playerId)
         {
-            // skip if we already got the DB info
-            if (_liteDb != null)
-                return;
-
             foreach (var chat in observation.Chat)
             {
                 if (chat.PlayerId != playerId)
@@ -259,10 +290,20 @@ namespace ExampleBot
                 if (!match.Success)
                     continue;
 
-                var dbFilename = match.Groups[1].Value;
-                OpenDb(dbFilename);
-                return;
+                return match.Groups[1].Value;
             }
+            return null;
+        }
+
+        private void OpenDbFromChat(ResponseObservation observation, uint playerId)
+        {
+            // skip if we already got the DB info
+            if (_liteDb != null)
+                return;
+
+            var dbFilename = GetDbInfoFromChat(observation, playerId);
+            if (dbFilename != null)
+                OpenDb(dbFilename);
         }
     }
 }
