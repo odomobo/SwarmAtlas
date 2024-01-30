@@ -27,13 +27,13 @@ namespace ExampleBot
             if (args.Length == 0)
             {
                 //gameLauncher.RunSinglePlayer(bot, mapName, botRace, 5678, opponentRace, opponentDifficulty).Wait();
-                switch (1)
+                switch (2)
                 {
                     case 1:
                         RunVsHuman(bot, gameLauncher);
                         break;
                     case 2:
-                        ProcessReplay(bot);
+                        SimulateBot(bot);
                         break;
                 }
             }
@@ -49,14 +49,10 @@ namespace ExampleBot
             gameLauncher.RunVsHuman(bot, mapName, botRace, 5678, 5679, 6000, Race.Terran, "Human").Wait();
         }
 
-        private static void ProcessReplay(IBot bot)
+        private static void SimulateBot(ExampleBot bot)
         {
-            var gameConfig = new GameConfig();
-            gameConfig.Realtime = false; // we want to process replays fast... I think
-            var exeLauncher = new ExeLauncher(gameConfig);
-            var gameLauncher = new GameLauncher(exeLauncher, gameConfig);
-
-            gameLauncher.ProcessReplay(bot, 2, 5678, @"Blackburn AIE (103).SC2Replay").Wait();
+            var proxy = new ProtobufProxy(); // this doesn't actually have to be connected; only used for parsing buffers
+            bot.Simulate(proxy, "match 2024-01-30_00-24-02.db");
         }
     }
 }

@@ -109,7 +109,8 @@ namespace SC2API.CSharp
 
             await connection.StartReplay(replayFilename, playerId);
 
-            await connection.ProcessReplay(bot, playerId);
+            throw new NotImplementedException();
+            //await connection.ProcessReplay(bot, playerId);
         }
     }
 }

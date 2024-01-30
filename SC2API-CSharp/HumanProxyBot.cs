@@ -10,7 +10,7 @@ namespace SC2API.CSharp
     {
         public string BotName => "Human";
 
-        public void OnStart(ResponseGameInfo gameInfo, ResponseData data, ResponsePing pingResponse, ResponseObservation observation, uint playerId, string opponentID)
+        public void OnStart(ResponseGameInfo gameInfo, ResponseData data, ResponsePing pingResponse, ResponseObservation observation, uint playerId)
         { }
 
         public IEnumerable<Action> OnFrame(ResponseObservation observation)
@@ -31,7 +31,7 @@ namespace SC2API.CSharp
             return response.Ping;
         }
 
-        public async Task Run(ProtobufProxy proxy, uint playerId, string opponentID)
+        public async Task Run(ProtobufProxy proxy, uint playerId)
         {
             Request gameInfoReq = new Request();
             gameInfoReq.GameInfo = new RequestGameInfo();
@@ -74,7 +74,7 @@ namespace SC2API.CSharp
                 if (start)
                 {
                     start = false;
-                    OnStart(gameInfoResponse.GameInfo, dataResponse.Data, pingResponse, observation, playerId, opponentID);
+                    OnStart(gameInfoResponse.GameInfo, dataResponse.Data, pingResponse, observation, playerId);
                 }
 
                 IEnumerable<SC2APIProtocol.Action> actions = OnFrame(observation);
@@ -90,11 +90,6 @@ namespace SC2API.CSharp
                 stepRequest.Step.Count = 1;
                 await proxy.SendRequest(stepRequest);
             }
-        }
-
-        public Task ProcessReplay(ProtobufProxy proxy, uint playerId)
-        {
-            throw new Exception($"{nameof(HumanProxyBot)} doesn't support processing replays");
         }
     }
 }

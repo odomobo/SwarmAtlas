@@ -167,7 +167,7 @@ namespace SC2API.CSharp
 
         public async Task Run(IBot bot, uint playerId, string opponentID)
         {
-            await bot.Run(proxy, playerId, opponentID);
+            await bot.Run(proxy, playerId);
         }
 
         public async Task StartReplay(string replayFilename, uint playerId)
@@ -184,11 +184,6 @@ namespace SC2API.CSharp
             request.StartReplay.Realtime = false;
 
             var response = await proxy.SendRequest(request);
-        }
-
-        public async Task ProcessReplay(IBot bot, uint playerId)
-        {
-            await bot.ProcessReplay(proxy, playerId);
         }
     }
 }

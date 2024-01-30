@@ -1,22 +1,30 @@
-﻿using SC2APIProtocol;
+﻿using SC2API.CSharp;
+using SC2APIProtocol;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
 using Action = SC2APIProtocol.Action;
 
 namespace ExampleBot
 {
     internal class InnerBot
     {
+        private readonly ProtobufProxy _proxy;
         public uint LastStepId { get; set; }
         public uint MyPlayerId { get; set; }
         public ulong FollowingUnitTag { get; set; }
 
-        public void OnStart(ResponseGameInfo gameInfo, ResponseData data, ResponsePing pingResponse, ResponseObservation observation, uint playerId, string opponentID)
+        public InnerBot(ProtobufProxy proxy, InitData initData)
         {
+            _proxy = proxy;
+            ResponseGameInfo gameInfo = proxy.GetResponseFromResponseBuf(initData.GameInfo).GameInfo;
+            ResponseData data = proxy.GetResponseFromResponseBuf(initData.Data).Data;
+            ResponsePing pingResponse = proxy.GetResponseFromResponseBuf(initData.PingResponse).Ping;
+            ResponseObservation observation = proxy.GetResponseFromResponseBuf(initData.Observation).Observation;
+            uint playerId = initData.PlayerId;
+
             Console.WriteLine($"PlayerID {playerId}");
             MyPlayerId = playerId;
 
@@ -24,8 +32,11 @@ namespace ExampleBot
             Console.WriteLine($"Unit 0 owner: {observation.Observation.RawData.Units[0].Owner}");
         }
 
-        public List<Action> OnFrame(ResponseObservation observation)
+        public List<Action> OnFrame(FrameData frameData)
         {
+            ResponseObservation observation = _proxy.GetResponseFromResponseBuf(frameData.Observation).Observation;
+            int frameNumber = frameData.FrameNumber;
+
             Console.WriteLine($"Processing step {observation.Observation.GameLoop}; last step ID was {LastStepId}");
             LastStepId = observation.Observation.GameLoop;
 
@@ -48,6 +59,7 @@ namespace ExampleBot
             return actions;
         }
 
+        // probably not needed...
         public void OnEnd(ResponseObservation observation, Result result)
         {
             
