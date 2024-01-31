@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Autofac;
+using Microsoft.Extensions.Configuration;
 using NLog;
 using NLog.Extensions.Logging;
 using SC2API.CSharp;
@@ -31,28 +32,35 @@ namespace SwarmAtlas.Lib
 
             Logger.Info("Starting application");
 
-            var gameConfig = new GameConfig();
-            var bot = new SwarmAtlasRunner(gameConfig);
-            var exeLauncher = new ExeLauncher(gameConfig);
-            var gameLauncher = new GameLauncher(exeLauncher, gameConfig);
+            var container = AutofacRegistration.BuildContainer(args);
+            using (var scope = container.BeginLifetimeScope())
+            {
+
+                //var gameConfig = new GameConfig();
+                //var bot = new SwarmAtlasRunner(gameConfig);
+                //var exeLauncher = new ExeLauncher(gameConfig);
+                //var gameLauncher = new GameLauncher(exeLauncher, gameConfig);
+                var bot = scope.Resolve<SwarmAtlasRunner>();
+                var gameLauncher = scope.Resolve<GameLauncher>();
 
             if (args.Length == 0)
-            {
-                //gameLauncher.RunSinglePlayer(bot, mapName, botRace, 5678, opponentRace, opponentDifficulty).Wait();
-                switch (2)
                 {
-                    case 1:
-                        RunVsHuman(bot, gameLauncher);
-                        break;
-                    case 2:
-                        SimulateBot(bot, "match 2024-01-30_00-24-02.db");
-                        break;
+                    //gameLauncher.RunSinglePlayer(bot, mapName, botRace, 5678, opponentRace, opponentDifficulty).Wait();
+                    switch (2)
+                    {
+                        case 1:
+                            RunVsHuman(bot, gameLauncher);
+                            break;
+                        case 2:
+                            SimulateBot(bot, "match 2024-01-31_02-07-50.db");
+                            break;
+                    }
                 }
-            }
-            else
-            {
-                var commandLineArgs = new CommandLineArgs(args);
-                gameLauncher.RunLadder(bot, botRace, commandLineArgs.GamePort, commandLineArgs.StartPort, commandLineArgs.OpponentID).Wait();
+                else
+                {
+                    var commandLineArgs = new CommandLineArgs(args);
+                    gameLauncher.RunLadder(bot, botRace, commandLineArgs.GamePort, commandLineArgs.StartPort, commandLineArgs.OpponentID).Wait();
+                }
             }
         }
 
