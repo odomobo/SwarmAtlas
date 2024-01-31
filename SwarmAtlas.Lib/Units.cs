@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ExampleBot
+namespace SwarmAtlas.Lib
 {
     public class Units
     {

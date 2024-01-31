@@ -1,4 +1,5 @@
-﻿using SC2API.CSharp;
+﻿using NLog;
+using SC2API.CSharp;
 using SC2APIProtocol;
 using System;
 using System.Collections.Generic;
@@ -7,16 +8,18 @@ using System.Text;
 using System.Threading.Tasks;
 using Action = SC2APIProtocol.Action;
 
-namespace ExampleBot
+namespace SwarmAtlas.Lib
 {
-    internal class InnerBot
+    internal class SwarmAtlas
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         private readonly ProtobufProxy _proxy;
         public uint LastStepId { get; set; }
         public uint MyPlayerId { get; set; }
         public ulong FollowingUnitTag { get; set; }
 
-        public InnerBot(ProtobufProxy proxy, InitData initData)
+        public SwarmAtlas(ProtobufProxy proxy, InitData initData)
         {
             _proxy = proxy;
             ResponseGameInfo gameInfo = proxy.GetResponseFromResponseBuf(initData.GameInfo).GameInfo;
@@ -25,11 +28,11 @@ namespace ExampleBot
             ResponseObservation observation = proxy.GetResponseFromResponseBuf(initData.Observation).Observation;
             uint playerId = initData.PlayerId;
 
-            Console.WriteLine($"PlayerID {playerId}");
+            Logger.Info($"PlayerID {playerId}");
             MyPlayerId = playerId;
 
-            Console.WriteLine($"Unit 0 type: {observation.Observation.RawData.Units[0].UnitType}");
-            Console.WriteLine($"Unit 0 owner: {observation.Observation.RawData.Units[0].Owner}");
+            Logger.Info($"Unit 0 type: {observation.Observation.RawData.Units[0].UnitType}");
+            Logger.Info($"Unit 0 owner: {observation.Observation.RawData.Units[0].Owner}");
         }
 
         public List<Action> OnFrame(FrameData frameData)
@@ -37,12 +40,12 @@ namespace ExampleBot
             ResponseObservation observation = _proxy.GetResponseFromResponseBuf(frameData.Observation).Observation;
             int frameNumber = frameData.FrameNumber;
 
-            Console.WriteLine($"Processing step {observation.Observation.GameLoop}; last step ID was {LastStepId}");
+            Logger.Info($"Processing step {observation.Observation.GameLoop}; last step ID was {LastStepId}");
             LastStepId = observation.Observation.GameLoop;
 
-            var myUnits = observation.Observation.RawData.Units.Where(u => u.Owner == MyPlayerId).ToList(); ;
+            var myUnits = observation.Observation.RawData.Units.Where(u => u.Owner == MyPlayerId).ToList();
 
-            var myDrones = myUnits.Where(u => u.UnitType == 104); // I think drone is 104
+            var myDrones = myUnits.Where(u => u.UnitType == 104); // drone is 104
 
             if (FollowingUnitTag == 0)
             {
@@ -52,7 +55,7 @@ namespace ExampleBot
 
             var followingUnit = myDrones.Where(u => u.Tag == FollowingUnitTag).First();
             
-            Console.WriteLine($"Following drone xy: {followingUnit.Pos.X}, {followingUnit.Pos.Y}; facing: {followingUnit.Facing}; Tag: {followingUnit.Tag}");
+            Logger.Info($"Following drone xy: {followingUnit.Pos.X}, {followingUnit.Pos.Y}; facing: {followingUnit.Facing}; Tag: {followingUnit.Tag}");
 
             List<Action> actions = new List<Action>();
 

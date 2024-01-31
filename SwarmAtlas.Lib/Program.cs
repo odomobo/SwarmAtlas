@@ -1,10 +1,15 @@
-﻿using SC2API.CSharp;
+﻿using Microsoft.Extensions.Configuration;
+using NLog;
+using NLog.Extensions.Logging;
+using SC2API.CSharp;
 using SC2APIProtocol;
 
-namespace ExampleBot
+namespace SwarmAtlas.Lib
 {
     public class Program
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         // Settings for your bot.
         private static Race botRace = Race.Zerg;
 
@@ -19,8 +24,15 @@ namespace ExampleBot
          */
         public static void Run(string[] args)
         {
+            //IConfigurationRoot config = new ConfigurationBuilder()
+            //    .AddJsonFile("appsettings.json")
+            //    .AddEnvironmentVariables()
+            //    .Build();
+
+            Logger.Info("Starting application");
+
             var gameConfig = new GameConfig();
-            var bot = new ExampleBot(gameConfig);
+            var bot = new SwarmAtlasRunner(gameConfig);
             var exeLauncher = new ExeLauncher(gameConfig);
             var gameLauncher = new GameLauncher(exeLauncher, gameConfig);
 
@@ -33,7 +45,7 @@ namespace ExampleBot
                         RunVsHuman(bot, gameLauncher);
                         break;
                     case 2:
-                        SimulateBot(bot);
+                        SimulateBot(bot, "match 2024-01-30_00-24-02.db");
                         break;
                 }
             }
@@ -46,13 +58,15 @@ namespace ExampleBot
 
         private static void RunVsHuman(IBot bot, GameLauncher gameLauncher)
         {
+            Logger.Info("Running game with bot against human");
             gameLauncher.RunVsHuman(bot, mapName, botRace, 5678, 5679, 6000, Race.Terran, "Human").Wait();
         }
 
-        private static void SimulateBot(ExampleBot bot)
+        private static void SimulateBot(SwarmAtlasRunner bot, string replayDbFilename)
         {
+            Logger.Info($"Simulating replay for {replayDbFilename}");
             var proxy = new ProtobufProxy(); // this doesn't actually have to be connected; only used for parsing buffers
-            bot.Simulate(proxy, "match 2024-01-30_00-24-02.db");
+            bot.Simulate(proxy, replayDbFilename);
         }
     }
 }

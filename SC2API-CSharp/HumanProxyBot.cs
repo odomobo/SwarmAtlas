@@ -8,7 +8,7 @@ namespace SC2API.CSharp
 {
     class HumanProxyBot : IBot
     {
-        public string BotName => "Human";
+        public string BotName => "TerranColony";
 
         public void OnStart(ResponseGameInfo gameInfo, ResponseData data, ResponsePing pingResponse, ResponseObservation observation, uint playerId)
         { }

@@ -11,7 +11,7 @@ using System.Threading;
 using System.Text.RegularExpressions;
 using System.IO;
 
-namespace ExampleBot
+namespace SwarmAtlas.Lib
 {
     class UnitData
     {
@@ -33,18 +33,18 @@ namespace ExampleBot
         public int FrameNumber { get; set; }
     }
 
-    class ExampleBot : IBot
+    class SwarmAtlasRunner : IBot
     {
         private readonly GameConfig _gameConfig;
-        internal ExampleBot(GameConfig gameConfig)
+        internal SwarmAtlasRunner(GameConfig gameConfig)
         {
             _gameConfig = gameConfig;
         }
 
-        public string BotName => "ExampleBot";
+        public string BotName => "SwarmAtlas";
 
         private LiteDatabase _liteDb = null;
-        private InnerBot _innerBot = null;
+        private SwarmAtlas _innerBot = null;
 
         public async Task Run(ProtobufProxy proxy, uint playerId)
         {
@@ -99,7 +99,7 @@ namespace ExampleBot
                     var initDataCollection = _liteDb.GetCollection<InitData>("initData");
                     initDataCollection.Insert(initData);
 
-                    _innerBot = new InnerBot(proxy, initData);
+                    _innerBot = new SwarmAtlas(proxy, initData);
                 }
 
                 var frameData = new FrameData
@@ -138,7 +138,7 @@ namespace ExampleBot
             OpenDb(dbFilename);
             var initDataCollection = _liteDb.GetCollection<InitData>("initData");
             var initData = initDataCollection.FindOne(x => true);
-            _innerBot = new InnerBot(proxy, initData);
+            _innerBot = new SwarmAtlas(proxy, initData);
 
             for (int frameNumber = 0; ; frameNumber++)
             {

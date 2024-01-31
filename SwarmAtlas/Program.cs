@@ -1,11 +1,11 @@
 ﻿
-namespace DotnetCoreRunner
+namespace SwarmAtlas
 {
     class Program
     {
         static void Main(string[] args)
         {
-            ExampleBot.Program.Run(args);
+            SwarmAtlas.Lib.Program.Run(args);
         }
     }
 }

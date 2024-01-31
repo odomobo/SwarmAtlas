@@ -7,12 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SC2APIProtocol", "SC2APIPro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SC2API.CSharp", "SC2API-CSharp\SC2API.CSharp.csproj", "{3A80D8CD-E915-4094-8ED8-890B8F4EE72F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExampleBot", "ExampleBot\ExampleBot.csproj", "{50579668-A3FB-43F4-B88C-05995BE4C8CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SwarmAtlas.Lib", "SwarmAtlas.Lib\SwarmAtlas.Lib.csproj", "{A3113851-1830-478E-A021-643B8739B0EA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotnetCoreRunner", "DotnetCoreRunner\DotnetCoreRunner.csproj", "{B24F9573-4A58-43D5-824B-92C5E51281F8}"
-	ProjectSection(ProjectDependencies) = postProject
-		{50579668-A3FB-43F4-B88C-05995BE4C8CC} = {50579668-A3FB-43F4-B88C-05995BE4C8CC}
-	EndProjectSection
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SwarmAtlas", "SwarmAtlas\SwarmAtlas.csproj", "{F79572F1-D27D-46D3-BDFF-F0BC808CC6ED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,14 +25,14 @@ Global
 		{3A80D8CD-E915-4094-8ED8-890B8F4EE72F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A80D8CD-E915-4094-8ED8-890B8F4EE72F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A80D8CD-E915-4094-8ED8-890B8F4EE72F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{50579668-A3FB-43F4-B88C-05995BE4C8CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{50579668-A3FB-43F4-B88C-05995BE4C8CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{50579668-A3FB-43F4-B88C-05995BE4C8CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{50579668-A3FB-43F4-B88C-05995BE4C8CC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B24F9573-4A58-43D5-824B-92C5E51281F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B24F9573-4A58-43D5-824B-92C5E51281F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B24F9573-4A58-43D5-824B-92C5E51281F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B24F9573-4A58-43D5-824B-92C5E51281F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3113851-1830-478E-A021-643B8739B0EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3113851-1830-478E-A021-643B8739B0EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3113851-1830-478E-A021-643B8739B0EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3113851-1830-478E-A021-643B8739B0EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F79572F1-D27D-46D3-BDFF-F0BC808CC6ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F79572F1-D27D-46D3-BDFF-F0BC808CC6ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F79572F1-D27D-46D3-BDFF-F0BC808CC6ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F79572F1-D27D-46D3-BDFF-F0BC808CC6ED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
