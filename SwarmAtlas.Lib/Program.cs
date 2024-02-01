@@ -35,24 +35,19 @@ namespace SwarmAtlas.Lib
             var container = AutofacRegistration.BuildContainer(args);
             using (var scope = container.BeginLifetimeScope())
             {
-
-                //var gameConfig = new GameConfig();
-                //var bot = new SwarmAtlasRunner(gameConfig);
-                //var exeLauncher = new ExeLauncher(gameConfig);
-                //var gameLauncher = new GameLauncher(exeLauncher, gameConfig);
                 var bot = scope.Resolve<SwarmAtlasRunner>();
                 var gameLauncher = scope.Resolve<GameLauncher>();
 
-            if (args.Length == 0)
+                if (args.Length == 0)
                 {
                     //gameLauncher.RunSinglePlayer(bot, mapName, botRace, 5678, opponentRace, opponentDifficulty).Wait();
-                    switch (2)
+                    switch (1)
                     {
                         case 1:
                             RunVsHuman(bot, gameLauncher);
                             break;
                         case 2:
-                            SimulateBot(bot, "match 2024-01-31_02-07-50.db");
+                            SimulateBot(bot, "match 2024-02-01_01-01-39.db");
                             break;
                     }
                 }

@@ -144,7 +144,8 @@ namespace SwarmAtlas.Lib
                 frameDataCollection.Insert(frameData);
                 _liteDb.Commit();
 
-                var actions = _swarmAtlas.OnFrame(frameData.GetFrameData(proxy));
+                var actions = new Queue<Action>();
+                _swarmAtlas.OnFrame(frameData.GetFrameData(proxy), actions);
 
                 if (actions.Any())
                 {
@@ -183,7 +184,8 @@ namespace SwarmAtlas.Lib
                     break;
                 }
 
-                _swarmAtlas.OnFrame(rawFrameDatas.First().GetFrameData(proxy));
+                var actions = new Queue<Action>();
+                _swarmAtlas.OnFrame(rawFrameDatas.First().GetFrameData(proxy), actions);
             }
         }
 

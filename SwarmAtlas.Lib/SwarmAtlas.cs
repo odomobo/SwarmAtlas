@@ -1,6 +1,7 @@
 ﻿using NLog;
 using SC2API.CSharp;
 using SC2APIProtocol;
+using SwarmAtlas.Lib.Executives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,54 +15,50 @@ namespace SwarmAtlas.Lib
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        public uint LastStepId { get; set; }
-        public uint MyPlayerId { get; set; }
-        public ulong FollowingUnitTag { get; set; }
-
+        private readonly UnitTypes _unitTypes;
         private readonly Units _units;
+        private readonly GameInfo _gameInfo;
+        private readonly ProductionExecutive _productionExecutive;
 
-        public SwarmAtlas(Units units)
+        public SwarmAtlas(UnitTypes unitTypes, Units units, GameInfo gameInfo, ProductionExecutive productionExecutive)
         {
+            _unitTypes = unitTypes;
             _units = units;
+            _gameInfo = gameInfo;
+            _productionExecutive = productionExecutive;
         }
 
         public void Init(InitData initData)
         {
-            _units.Init(initData);
+            _gameInfo.Init(initData);
+            _unitTypes.Init(initData);
 
-            MyPlayerId = initData.PlayerId;
-            Logger.Info($"PlayerID {MyPlayerId}");
-            
-            Logger.Info($"Unit 0 type: {initData.Observation.Observation.RawData.Units[0].UnitType}");
-            Logger.Info($"Unit 0 owner: {initData.Observation.Observation.RawData.Units[0].Owner}");
+            var plan = new ProductionPlan();
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Overlord));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
+            _productionExecutive.SetProductionPlan(plan);
         }
 
-        public List<Action> OnFrame(FrameData frameData)
+        public void OnFrame(FrameData frameData, Queue<Action> actions)
         {
-            Logger.Info($"Processing step {frameData.Observation.Observation.GameLoop}; last step ID was {LastStepId}");
-            LastStepId = frameData.Observation.Observation.GameLoop;
+            Logger.Info($"Processing step {frameData.Observation.Observation.GameLoop}");
 
-            var myUnits = frameData.Observation.Observation.RawData.Units.Where(u => u.Owner == MyPlayerId).ToList();
+            _units.OnFrame(frameData, actions);
+            _gameInfo.OnFrame(frameData, actions);
 
-            var myDrones = myUnits.Where(u => u.UnitType == _units.Drone.UnitId); // drone is 104
-
-            if (FollowingUnitTag == 0)
-            {
-                var firstDrone = myDrones.First();
-                FollowingUnitTag = firstDrone.Tag;
-            }
-
-            var followingUnit = myDrones.Where(u => u.Tag == FollowingUnitTag).First();
-            
-            Logger.Info($"Following drone xy: {followingUnit.Pos.X}, {followingUnit.Pos.Y}; facing: {followingUnit.Facing}; Tag: {followingUnit.Tag}");
-
-            List<Action> actions = new List<Action>();
-
-            return actions;
+            _productionExecutive.OnFrame(frameData, actions);
         }
 
-        // probably not needed...
-        public void OnEnd(ResponseObservation observation, Result result)
+        // just for cleanup; currently unused
+        public void OnEnd(Result result)
         {
             
         }

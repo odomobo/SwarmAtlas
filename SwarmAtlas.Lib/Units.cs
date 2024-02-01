@@ -4,17 +4,35 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Action = SC2APIProtocol.Action;
 
 namespace SwarmAtlas.Lib
 {
     public class Units
     {
-        public UnitTypeData Drone { get; private set; }
+        public List<Unit> MyUnits { get; set; }
+        public List<Unit> MyStructures { get; set; }
+        public List<Unit> EnemyUnits { get; set; }
+        public List<Unit> EnemyStructures { get; set; }
+        public List<Unit> NeutralStructures { get; set; }
 
-        public void Init(InitData initData) {
+        private readonly GameInfo _gameInfo;
+        private readonly UnitTypes _unitTypes;
 
-            var unitDict = initData.Data.Units.Where(u => !string.IsNullOrWhiteSpace(u.Name)).ToDictionary(u => u.Name);
-            Drone = unitDict["Drone"];
+        public Units(GameInfo gameInfo, UnitTypes unitTypes)
+        {
+            _gameInfo = gameInfo;
+            _unitTypes = unitTypes;
+        }
+
+        public void OnFrame(FrameData frame, Queue<Action> actions)
+        {
+            var allUnits = frame.Observation.Observation.RawData.Units;
+            MyUnits = allUnits.Where(u => u.Owner == _gameInfo.MyPlayerId && !_unitTypes.IsStructure(u.UnitType)).ToList();
+            MyStructures = allUnits.Where(u => u.Owner == _gameInfo.MyPlayerId && _unitTypes.IsStructure(u.UnitType)).ToList();
+            EnemyUnits = allUnits.Where(u => u.Owner == _gameInfo.EnemyPlayerId && !_unitTypes.IsStructure(u.UnitType)).ToList();
+            EnemyStructures = allUnits.Where(u => u.Owner == _gameInfo.EnemyPlayerId && _unitTypes.IsStructure(u.UnitType)).ToList();
+            NeutralStructures = allUnits.Where(u => u.Owner == _gameInfo.NeutralPlayerId && _unitTypes.IsStructure(u.UnitType)).ToList();
         }
     }
 }
