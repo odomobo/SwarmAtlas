@@ -47,7 +47,7 @@ namespace SwarmAtlas.Lib
                             RunVsHuman(bot, gameLauncher);
                             break;
                         case 2:
-                            SimulateBot(bot, "match 2024-02-01_01-01-39.db");
+                            SimulateBot(bot, "match 2024-02-01_15-50-18.db");
                             break;
                     }
                 }

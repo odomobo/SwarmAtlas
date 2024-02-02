@@ -171,7 +171,8 @@ namespace SwarmAtlas.Lib
             OpenDb(dbFilename);
             var rawInitDataCollection = _liteDb.GetCollection<RawInitData>("rawInitData");
             var rawInitData = rawInitDataCollection.FindOne(x => true);
-            _swarmAtlas.Init(rawInitData.GetInitData(proxy));
+            var initData = rawInitData.GetInitData(proxy);
+            _swarmAtlas.Init(initData);
 
             for (int frameNumber = 0; ; frameNumber++)
             {
@@ -185,7 +186,8 @@ namespace SwarmAtlas.Lib
                 }
 
                 var actions = new Queue<Action>();
-                _swarmAtlas.OnFrame(rawFrameDatas.First().GetFrameData(proxy), actions);
+                var frame = rawFrameDatas.Single().GetFrameData(proxy);
+                _swarmAtlas.OnFrame(frame, actions);
             }
         }
 

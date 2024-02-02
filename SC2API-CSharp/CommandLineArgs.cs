@@ -14,7 +14,7 @@ namespace SC2API.CSharp
         public int StartPort { get; set; }
         public string LadderServer { get; set; }
         public Race ComputerRace { get; set; } = Race.NoRace;
-        public Difficulty ComputerDifficulty { get; set; } = Difficulty.Unset;
+        public Difficulty ComputerDifficulty { get; set; } = Difficulty.Easy;
         public string OpponentID { get; set; }
 
         public CommandLineArgs(string[] args)
@@ -33,8 +33,6 @@ namespace SC2API.CSharp
                 {
                     if (ComputerRace == Race.NoRace)
                         ComputerRace = Race.Random;
-                    if (ComputerDifficulty == Difficulty.Unset)
-                        ComputerDifficulty = Difficulty.VeryHard;
                     i--;
                 }
                 else if (args[i] == "-a" || args[i] == "--ComputerRace")

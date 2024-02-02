@@ -62,7 +62,7 @@ namespace SC2API.CSharp
 
                 if (observation == null)
                 {
-                    OnEnd(observation, Result.Unset);
+                    OnEnd(observation, Result.Undecided);
                     break;
                 }
                 if (response.Status == Status.Ended || response.Status == Status.Quit)
