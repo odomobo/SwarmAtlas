@@ -47,7 +47,7 @@ namespace SwarmAtlas.Lib
                             RunVsHuman(bot, gameLauncher);
                             break;
                         case 2:
-                            SimulateBot(bot, "match 2024-02-01_15-50-18.db");
+                            SimulateBot(bot, "match 2024-02-01_16-23-53.db");
                             break;
                     }
                 }
@@ -67,7 +67,7 @@ namespace SwarmAtlas.Lib
 
         private static void SimulateBot(SwarmAtlasRunner bot, string replayDbFilename)
         {
-            Logger.Info($"Simulating replay for {replayDbFilename}");
+            Logger.Info($"Simulating replay for \"{replayDbFilename}\"");
             var proxy = new ProtobufProxy(); // this doesn't actually have to be connected; only used for parsing buffers
             bot.Simulate(proxy, replayDbFilename);
         }

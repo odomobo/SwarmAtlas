@@ -13,18 +13,12 @@ namespace SwarmAtlas.Lib.Executives
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly Units _units;
-        private readonly UnitTypes _unitTypes;
-        private readonly GameInfo _gameInfo;
+        // injected
+        public required Units Units { protected get; init; }
+        public required UnitTypes UnitTypes { protected get; init; }
+        public required GameInfo GameInfo { protected get; init; }
 
         private ProductionPlan _plan = new ProductionPlan();
-
-        public ProductionExecutive(Units units, UnitTypes unitTypes, GameInfo gameInfo)
-        {
-            _units = units;
-            _unitTypes = unitTypes;
-            _gameInfo = gameInfo;
-        }
 
         public void SetProductionPlan(ProductionPlan plan)
         {
@@ -63,17 +57,17 @@ namespace SwarmAtlas.Lib.Executives
             for (int i = _plan.PendingSpawnUnitTasks.Count - 1; i >= 0; i--)
             {
                 var task = _plan.PendingSpawnUnitTasks[i];
-                var larva = _units.MyUnits.FirstOrDefault(u => u.Tag == task.LarvaTag);
+                var larva = Units.MyUnits.FirstOrDefault(u => u.Tag == task.LarvaTag);
                 // if tag is no longer found, or at least not a larva
-                if (larva == null || larva.UnitType != _unitTypes.Larva.UnitId)
+                if (larva == null || larva.UnitType != UnitTypes.Larva.UnitId)
                 {
                     if (larva == null)
                     {
                         Logger.Warn($"Larva tag {task.LarvaTag} was expected to turn into an egg, but it's no longer found");
                     }
-                    else if (larva.UnitType != _unitTypes.Egg.UnitId)
+                    else if (larva.UnitType != UnitTypes.Egg.UnitId)
                     {
-                        Logger.Warn($"Larva tag {task.LarvaTag} was expected to turn into an egg, but instead turned into {_unitTypes.UnitTypeLookup[larva.UnitType].Name}");
+                        Logger.Warn($"Larva tag {task.LarvaTag} was expected to turn into an egg, but instead turned into {UnitTypes.UnitTypeLookup[larva.UnitType].Name}");
                     }
 
                     _plan.PendingSpawnUnitTasks.RemoveAt(i);
@@ -91,7 +85,7 @@ namespace SwarmAtlas.Lib.Executives
 
         private bool SpawnUnit(ProductionTask.CSpawnUnit task, FrameData frame, HashSet<ulong> pendingLarvaTags, Queue<Action> actions)
         {
-            var firstLarva = _units.MyLarva.Where(u => !pendingLarvaTags.Contains(u.Tag)).FirstOrDefault();
+            var firstLarva = Units.MyLarva.Where(u => !pendingLarvaTags.Contains(u.Tag)).FirstOrDefault();
             if (firstLarva == null)
             {
                 return false;
@@ -103,9 +97,9 @@ namespace SwarmAtlas.Lib.Executives
             var supplyCost = (uint)task.UnitType.FoodRequired;
 
             // check requirements before building
-            if (_gameInfo.Minerals < mineralCost ||
-                _gameInfo.Gas < gasCost ||
-                _gameInfo.FreeSupply < supplyCost)
+            if (GameInfo.Minerals < mineralCost ||
+                GameInfo.Gas < gasCost ||
+                GameInfo.FreeSupply < supplyCost)
             {
                 return false;
             }
@@ -148,9 +142,9 @@ namespace SwarmAtlas.Lib.Executives
             var gasCost = task.UnitType.VespeneCost;
             var supplyCost = (uint)task.UnitType.FoodRequired;
 
-            _gameInfo.Minerals -= (int)mineralCost;
-            _gameInfo.Gas -= (int)gasCost;
-            _gameInfo.FreeSupply -= (int)supplyCost;
+            GameInfo.Minerals -= (int)mineralCost;
+            GameInfo.Gas -= (int)gasCost;
+            GameInfo.FreeSupply -= (int)supplyCost;
         }
     }
 }

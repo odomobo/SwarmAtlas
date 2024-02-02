@@ -11,6 +11,7 @@ using System.Threading;
 using System.Text.RegularExpressions;
 using System.IO;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using NLog;
 
 namespace SwarmAtlas.Lib
 {
@@ -66,20 +67,23 @@ namespace SwarmAtlas.Lib
 
     public class SwarmAtlasRunner : IBot
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
+        // injected
+        public required GameConfig GameConfig { protected get; init; }
+        public required SwarmAtlas SwarmAtlas { protected get; init; }
+
         public string BotName => "SwarmAtlas";
 
         private LiteDatabase _liteDb = null;
-        private readonly GameConfig _gameConfig;
-        private readonly SwarmAtlas _swarmAtlas;
-
-        public SwarmAtlasRunner(GameConfig gameConfig, SwarmAtlas swarmAtlas)
-        {
-            _gameConfig = gameConfig;
-            _swarmAtlas = swarmAtlas;
-        }
 
         public async Task Run(ProtobufProxy proxy, uint playerId)
         {
+            var dbFilename = GenerateDbFilename();
+            OpenDb(dbFilename);
+
+            Logger.Info($"Running game against human; using litedb filename \"{dbFilename}\"");
+
             Request gameInfoReq = new Request();
             gameInfoReq.GameInfo = new RequestGameInfo();
             var (gameInfoResponse, gameInfoResponseBuf) = await proxy.SendRequestRaw(gameInfoReq);
@@ -114,8 +118,8 @@ namespace SwarmAtlas.Lib
                     break;
                 }
 
-                // on first loop, get db and set init data
-                if (_liteDb == null)
+                // on first loop, set init data
+                if (frameNumber == 0)
                 {
                     var rawInitData = new RawInitData
                     {
@@ -126,12 +130,10 @@ namespace SwarmAtlas.Lib
                         PlayerId = playerId,
                     };
 
-                    var dbFilename = GenerateDbFilename();
-                    OpenDb(dbFilename);
                     var initDataCollection = _liteDb.GetCollection<RawInitData>("rawInitData");
                     initDataCollection.Insert(rawInitData);
 
-                    _swarmAtlas.Init(rawInitData.GetInitData(proxy));
+                    SwarmAtlas.Init(rawInitData.GetInitData(proxy));
                 }
 
                 var frameData = new RawFrameData
@@ -145,7 +147,7 @@ namespace SwarmAtlas.Lib
                 _liteDb.Commit();
 
                 var actions = new Queue<Action>();
-                _swarmAtlas.OnFrame(frameData.GetFrameData(proxy), actions);
+                SwarmAtlas.OnFrame(frameData.GetFrameData(proxy), actions);
 
                 if (actions.Any())
                 {
@@ -168,11 +170,13 @@ namespace SwarmAtlas.Lib
         // TODO: can make this into a generator to allow stepping through, by some other method
         public void Simulate(ProtobufProxy proxy, string dbFilename)
         {
+            Logger.Info($"Simulating from litedb filename \"{dbFilename}\"");
+
             OpenDb(dbFilename);
             var rawInitDataCollection = _liteDb.GetCollection<RawInitData>("rawInitData");
             var rawInitData = rawInitDataCollection.FindOne(x => true);
             var initData = rawInitData.GetInitData(proxy);
-            _swarmAtlas.Init(initData);
+            SwarmAtlas.Init(initData);
 
             for (int frameNumber = 0; ; frameNumber++)
             {
@@ -187,7 +191,7 @@ namespace SwarmAtlas.Lib
 
                 var actions = new Queue<Action>();
                 var frame = rawFrameDatas.Single().GetFrameData(proxy);
-                _swarmAtlas.OnFrame(frame, actions);
+                SwarmAtlas.OnFrame(frame, actions);
             }
         }
 
@@ -208,7 +212,7 @@ namespace SwarmAtlas.Lib
         private void OpenDb(string dbFilename)
         {
             // TODO: use a different path; probably one just for the databases
-            _liteDb = new LiteDatabase(Path.Combine(_gameConfig.ReplayPath, dbFilename));
+            _liteDb = new LiteDatabase(Path.Combine(GameConfig.ReplayPath, dbFilename));
         }
 
         private void CloseDb()

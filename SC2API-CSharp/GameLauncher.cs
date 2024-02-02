@@ -15,19 +15,14 @@ namespace SC2API.CSharp
     /// </summary>
     public class GameLauncher
     {
-        private readonly GameConfig _config;
-        private readonly ExeLauncher _exeLauncher;
-
-        public GameLauncher(ExeLauncher exeLauncher, GameConfig config)
-        {
-            _exeLauncher = exeLauncher;
-            _config = config;
-        }
+        // injected
+        public required GameConfig Config { protected get; init; }
+        public required ExeLauncher ExeLauncher { protected get; init; }
 
         public async Task RunSinglePlayer(IBot bot, string map, Race myRace, int gamePort, Race opponentRace, Difficulty opponentDifficulty)
         {
-            var connection = new GameConnection(_config);
-            _exeLauncher.StartSC2Instance(gamePort);
+            var connection = new GameConnection(Config);
+            ExeLauncher.StartSC2Instance(gamePort);
             await connection.Connect(gamePort);
             await connection.CreateAiGame(map, opponentRace, opponentDifficulty);
             uint playerId = await connection.JoinGame(myRace, bot.BotName);
@@ -36,8 +31,8 @@ namespace SC2API.CSharp
 
         public async Task CreateAndRunLadder(IBot bot, string map, Race myRace, int gamePort, int startPort, string opponentID, ManualResetEvent ladderStarted)
         {
-            _exeLauncher.StartSC2Instance(gamePort);
-            var connection = new GameConnection(_config);
+            ExeLauncher.StartSC2Instance(gamePort);
+            var connection = new GameConnection(Config);
             await connection.Connect(gamePort);
             await connection.CreateLadderGame(map);
             ladderStarted.Set();
@@ -47,7 +42,7 @@ namespace SC2API.CSharp
 
         public async Task RunLadder(IBot bot, Race myRace, int gamePort, int startPort, string opponentID)
         {
-            var connection = new GameConnection(_config);
+            var connection = new GameConnection(Config);
             await connection.Connect(gamePort);
             uint playerId = await connection.JoinGameLadder(myRace, bot.BotName, startPort);
             await connection.Run(bot, playerId, opponentID);
@@ -72,20 +67,20 @@ namespace SC2API.CSharp
 
             // 1
             var humanProxyBot = new HumanProxyBot();
-            _exeLauncher.StartSC2Instance(gamePortHuman, false); // true if you want fs
+            ExeLauncher.StartSC2Instance(gamePortHuman, false); // true if you want fs
             
             // 2
-            var humanConnection = new GameConnection(_config);
+            var humanConnection = new GameConnection(Config);
             await humanConnection.Connect(gamePortHuman);
 
             // 3.
             await humanConnection.CreateLadderGame(map);
 
             // 4
-            _exeLauncher.StartSC2Instance(gamePortBot);
+            ExeLauncher.StartSC2Instance(gamePortBot);
 
             // 5
-            var botConnection = new GameConnection(_config);
+            var botConnection = new GameConnection(Config);
             await botConnection.Connect(gamePortBot);
 
             // 6
@@ -102,9 +97,9 @@ namespace SC2API.CSharp
 
         public async Task ProcessReplay(IBot bot, uint playerId, int gamePort, string replayFilename)
         {
-            _exeLauncher.StartSC2Instance(gamePort);
+            ExeLauncher.StartSC2Instance(gamePort);
 
-            var connection = new GameConnection(_config);
+            var connection = new GameConnection(Config);
             await connection.Connect(gamePort);
 
             await connection.StartReplay(replayFilename, playerId);

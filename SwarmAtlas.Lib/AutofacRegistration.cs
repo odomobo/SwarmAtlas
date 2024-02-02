@@ -17,7 +17,6 @@ namespace SwarmAtlas.Lib
             // SC2API.CSharp
             builder.RegisterType<ExeLauncher>().AsSelf().InstancePerLifetimeScope();
             builder.RegisterType<GameConfig>().AsSelf().InstancePerLifetimeScope();
-            builder.RegisterType<GameConnection>().AsSelf().InstancePerLifetimeScope();
             builder.RegisterType<GameLauncher>().AsSelf().InstancePerLifetimeScope();
 
             // SwarmAtlas.Lib

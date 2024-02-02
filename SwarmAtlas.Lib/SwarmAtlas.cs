@@ -15,46 +15,39 @@ namespace SwarmAtlas.Lib
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        private readonly UnitTypes _unitTypes;
-        private readonly Units _units;
-        private readonly GameInfo _gameInfo;
-        private readonly ProductionExecutive _productionExecutive;
-
-        public SwarmAtlas(UnitTypes unitTypes, Units units, GameInfo gameInfo, ProductionExecutive productionExecutive)
-        {
-            _unitTypes = unitTypes;
-            _units = units;
-            _gameInfo = gameInfo;
-            _productionExecutive = productionExecutive;
-        }
+        // injected
+        public required UnitTypes UnitTypes { protected get; init; }
+        public required Units Units { protected get; init; }
+        public required GameInfo GameInfo { protected get; init; }
+        public required ProductionExecutive ProductionExecutive { protected get; init; }
 
         public void Init(InitData initData)
         {
-            _gameInfo.Init(initData);
-            _unitTypes.Init(initData);
+            GameInfo.Init(initData);
+            UnitTypes.Init(initData);
 
             var plan = new ProductionPlan();
-            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
-            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Overlord));
-            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
-            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
-            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
-            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
-            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
-            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
-            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
-            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(_unitTypes.Drone));
-            _productionExecutive.SetProductionPlan(plan);
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(UnitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(UnitTypes.Overlord));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(UnitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(UnitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(UnitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(UnitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(UnitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(UnitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(UnitTypes.Drone));
+            plan.Tasks.Enqueue(ProductionTask.MakeSpawnUnit(UnitTypes.Drone));
+            ProductionExecutive.SetProductionPlan(plan);
         }
 
         public void OnFrame(FrameData frameData, Queue<Action> actions)
         {
             Logger.Info($"Processing step {frameData.Observation.Observation.GameLoop}");
 
-            _units.OnFrame(frameData, actions);
-            _gameInfo.OnFrame(frameData, actions);
+            Units.OnFrame(frameData, actions);
+            GameInfo.OnFrame(frameData, actions);
 
-            _productionExecutive.OnFrame(frameData, actions);
+            ProductionExecutive.OnFrame(frameData, actions);
         }
 
         // just for cleanup; currently unused
