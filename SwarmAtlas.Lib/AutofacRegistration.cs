@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using SC2API.CSharp;
 using SwarmAtlas.Lib.Executives;
+using SwarmAtlas.Gui;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,17 @@ namespace SwarmAtlas.Lib
 
             // SwarmAtlas.Lib
             builder.RegisterType<ProductionExecutive>().AsSelf().InstancePerLifetimeScope();
+
+            builder.RegisterType<SceneBuilder>().AsSelf().InstancePerLifetimeScope();
+            bool realRenderer = true; // TODO: take this as param I guess
+            if (realRenderer)
+            {
+                builder.RegisterType<Renderer>().As<IRenderer>().InstancePerLifetimeScope();
+            }
+            else
+            {
+                builder.RegisterType<DummyRenderer>().As<IRenderer>().InstancePerLifetimeScope();
+            }
 
             builder.RegisterType<GameInfo>().AsSelf().InstancePerLifetimeScope();
             builder.RegisterType<SwarmAtlas>().AsSelf().InstancePerLifetimeScope();

@@ -1,7 +1,5 @@
 ﻿using Autofac;
-using Microsoft.Extensions.Configuration;
 using NLog;
-using NLog.Extensions.Logging;
 using SC2API.CSharp;
 using SC2APIProtocol;
 
@@ -11,13 +9,19 @@ namespace SwarmAtlas.Lib
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
-        // Settings for your bot.
-        private static Race botRace = Race.Zerg;
+        // Settings for your bot. Maybe put this elsewhere
+        private const Race botRace = Race.Zerg;
 
         // Settings for single player mode.
-        private static string mapName = @"BlackburnAIE.SC2Map";
-        private static Race opponentRace = Race.Random;
-        private static Difficulty opponentDifficulty = Difficulty.VeryEasy;
+        private const string mapName = @"BlackburnAIE.SC2Map";
+        private const LaunchMode Mode = LaunchMode.Simulate;
+        private const string ReplayDbFilename = @"match 2024-02-01_16-23-53.db";
+
+        private enum LaunchMode
+        {
+            Run,
+            Simulate,
+        }
 
         /* The main entry point for the bot.
          * This will start the Stacraft 2 instance and connect to it.
@@ -32,6 +36,16 @@ namespace SwarmAtlas.Lib
 
             Logger.Info("Starting application");
 
+            //var renderer = new Renderer();
+            //var scene = new Scene();
+            //scene.MapObjects.Add(new CenteredSquare(new Vector2(50, 2), 1, Microsoft.Xna.Framework.Color.Purple, 0.1f));
+            //renderer.UpdateScene(scene);
+            //
+            //Thread.Sleep(60000);
+            //renderer.Stop();
+            //
+            //return;
+
             var container = AutofacRegistration.BuildContainer(args);
             using (var scope = container.BeginLifetimeScope())
             {
@@ -41,13 +55,13 @@ namespace SwarmAtlas.Lib
                 if (args.Length == 0)
                 {
                     //gameLauncher.RunSinglePlayer(bot, mapName, botRace, 5678, opponentRace, opponentDifficulty).Wait();
-                    switch (1)
+                    switch (Mode)
                     {
-                        case 1:
+                        case LaunchMode.Run:
                             RunVsHuman(bot, gameLauncher);
                             break;
-                        case 2:
-                            SimulateBot(bot, "match 2024-02-01_16-23-53.db");
+                        case LaunchMode.Simulate:
+                            SimulateBot(bot, ReplayDbFilename);
                             break;
                     }
                 }

@@ -192,6 +192,11 @@ namespace SwarmAtlas.Lib
                 var actions = new Queue<Action>();
                 var frame = rawFrameDatas.Single().GetFrameData(proxy);
                 SwarmAtlas.OnFrame(frame, actions);
+                
+                //if (frameNumber == 0)
+                //{
+                //    Thread.Sleep(int.MaxValue);
+                //}
             }
         }
 

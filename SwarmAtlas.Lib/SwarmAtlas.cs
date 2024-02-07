@@ -20,9 +20,11 @@ namespace SwarmAtlas.Lib
         public required Units Units { protected get; init; }
         public required GameInfo GameInfo { protected get; init; }
         public required ProductionExecutive ProductionExecutive { protected get; init; }
-
+        public required SceneBuilder SceneBuilder { protected get; init; }
+        
         public void Init(InitData initData)
         {
+            SceneBuilder.Init(initData);
             GameInfo.Init(initData);
             UnitTypes.Init(initData);
 
@@ -40,14 +42,17 @@ namespace SwarmAtlas.Lib
             ProductionExecutive.SetProductionPlan(plan);
         }
 
-        public void OnFrame(FrameData frameData, Queue<Action> actions)
+        public void OnFrame(FrameData frameData, Queue<SC2APIProtocol.Action> actions)
         {
             Logger.Info($"Processing step {frameData.Observation.Observation.GameLoop}");
 
+            SceneBuilder.OnFrame(frameData, actions);
             Units.OnFrame(frameData, actions);
             GameInfo.OnFrame(frameData, actions);
 
             ProductionExecutive.OnFrame(frameData, actions);
+
+            SceneBuilder.Render();
         }
 
         // just for cleanup; currently unused

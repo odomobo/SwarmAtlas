@@ -20,6 +20,8 @@
   <ItemGroup>
     <ProjectReference Include="..\SC2API-CSharp\SC2API.CSharp.csproj" />
     <ProjectReference Include="..\SC2APIProtocol\SC2APIProtocol.csproj" />
+    <ProjectReference Include="..\SwarmAtlas.Gui\SwarmAtlas.Gui.csproj" />
+    <ProjectReference Include="..\SwarmAtlas.Interface\SwarmAtlas.Interface.csproj" />
   </ItemGroup>
   
   <ItemGroup>
